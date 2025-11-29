@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "file-system": {
+      "command": "python",
+      "args": [
+        "/absolute/path/to/file-system-mcp-server/server.py"
+      ],
+      "env": {}
+    }
+  }
+}
+
