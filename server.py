@@ -19,10 +19,25 @@ from mcp.types import (
 # Initialize the MCP server
 app = Server("basic-fileserver")
 
+# Default sandbox directory for file operations
+SANDBOX_DIR = Path("sandbox")
+SANDBOX_DIR.mkdir(exist_ok=True)
+
+
+def resolve_sandbox_path(path_str: str) -> Path:
+    """Resolve a path relative to the sandbox directory."""
+    path = Path(path_str)
+    # If path is absolute, use it as-is (for safety, still resolve relative to sandbox)
+    # Otherwise, resolve relative to sandbox
+    if path.is_absolute():
+        # For absolute paths, still constrain to sandbox for security
+        return SANDBOX_DIR / path.name
+    return SANDBOX_DIR / path
+
 
 async def read_file_tool(arguments: dict) -> CallToolResult:
-    """Read and return the contents of a file."""
-    path = Path(arguments["path"])
+    """Read and return the contents of a file from the sandbox directory."""
+    path = resolve_sandbox_path(arguments["path"])
     if not path.is_file():
         return CallToolResult(
             content=[TextContent(type="text", text=f"Error: Not a file - {path}")],
@@ -41,8 +56,8 @@ async def read_file_tool(arguments: dict) -> CallToolResult:
 
 
 async def write_file_tool(arguments: dict) -> CallToolResult:
-    """Write string content to a file."""
-    path = Path(arguments["path"])
+    """Write string content to a file in the sandbox directory."""
+    path = resolve_sandbox_path(arguments["path"])
     content = arguments["content"]
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,13 +79,13 @@ async def list_tools() -> ListToolsResult:
         tools=[
             Tool(
                 name="read_file",
-                description="Read and return the contents of a file.",
+                description="Read and return the contents of a file from the sandbox directory.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "path": {
                             "type": "string",
-                            "description": "The path to the file",
+                            "description": "The path to the file (relative to sandbox directory)",
                         }
                     },
                     "required": ["path"],
@@ -78,13 +93,13 @@ async def list_tools() -> ListToolsResult:
             ),
             Tool(
                 name="write_file",
-                description="Write string content to a file.",
+                description="Write string content to a file in the sandbox directory.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "path": {
                             "type": "string",
-                            "description": "The target file path",
+                            "description": "The target file path (relative to sandbox directory)",
                         },
                         "content": {
                             "type": "string",

@@ -41,3 +41,5 @@ Thumbs.db
 *.log
 
 .env
+sandbox/test.md
+sandbox/*
